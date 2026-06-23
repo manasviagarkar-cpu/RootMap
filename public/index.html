@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌿 RootMap — Plant Health AI | Biothon 2026</title>
+  <meta name="description" content="RootMap uses Gemini Vision AI to diagnose plant health and map biodiversity across your city. Upload a photo, get an instant diagnosis, and pin your plant on the live city map." />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'sans-serif'] },
+          colors: {
+            forest: {
+              950: '#040d04',
+              900: '#0f1a0f',
+              800: '#152315',
+              700: '#1d321d',
+              600: '#274227',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="min-h-screen text-slate-100 bg-[#0f1a0f] font-inter">
+
+  <!-- Fallback Warning Banner (Switching to Demo Mode) -->
+  <div id="fallback-banner"
+       class="hidden w-full px-4 py-2.5 flex items-center gap-2.5
+              bg-amber-950/90 border-b border-amber-700/60 z-50">
+    <span class="text-amber-400 text-base shrink-0">⚠️</span>
+    <p class="text-amber-300 text-xs font-semibold flex-1">
+      Live scan unavailable — switching to Demo Mode
+    </p>
+    <button onclick="document.getElementById('fallback-banner').classList.add('hidden')"
+            class="text-amber-500 hover:text-amber-300 text-sm shrink-0">✕</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       NAVBAR
+  ═══════════════════════════════════════════════════ -->
+  <nav class="h-16 flex items-center justify-between px-4 md:px-6
+              bg-forest-800/80 backdrop-blur-md
+              border-b border-green-900/60 sticky top-0 z-50">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-700
+                  flex items-center justify-center text-lg shadow-lg shadow-green-900/50">
+        🌿
+      </div>
+      <div>
+        <span class="text-lg font-black tracking-tight text-green-400">Root</span><span class="text-lg font-black tracking-tight text-white">Map</span>
+        <div class="text-[9px] text-gray-500 font-medium -mt-1 tracking-widest uppercase">Plant Health AI</div>
+      </div>
+    </div>
+
+    <!-- Scan Counter Badge -->
+    <div class="flex items-center gap-3">
+      <div id="scan-badge"
+           class="flex items-center gap-1.5 px-3 py-1.5
+                  bg-green-950/60 border border-green-800/50 rounded-full
+                  text-xs font-bold text-green-400 cursor-default select-none">
+        📍 <span id="nav-scan-count">0 Scans</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════
+       MAIN LAYOUT
+  ═══════════════════════════════════════════════════ -->
+  <div id="app-layout" class="flex" style="height: calc(100vh - 64px);">
+
+    <!-- ─── LEFT PANEL (40%) ────────────────────────── -->
+    <div id="left-panel" class="w-2/5 p-4 md:p-5 space-y-4 bg-forest-900/50 border-r border-green-900/40 overflow-y-auto">
+
+      <!-- Upload Zone -->
+      <div id="upload-zone"
+           class="rounded-2xl cursor-pointer relative overflow-hidden
+                  bg-forest-800/60 border-2 border-dashed border-gray-700 transition-all duration-300"
+           style="min-height: 160px;">
+
+        <!-- Default state -->
+        <div id="upload-default" class="flex flex-col items-center justify-center gap-3 p-8 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-green-950/60 border border-green-800/50
+                      flex items-center justify-center text-3xl transition-transform">
+            📷
+          </div>
+          <div>
+            <p class="text-white font-semibold text-sm">Upload or photograph your plant</p>
+            <p class="text-gray-500 text-xs mt-1">Tap to select photo</p>
+          </div>
+        </div>
+
+        <!-- Preview state (hidden by default) -->
+        <div id="upload-preview" class="hidden relative">
+          <img id="preview-img" alt="Plant preview"
+               class="w-full object-cover rounded-2xl" style="max-height: 200px;" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl"></div>
+          <button id="clear-btn"
+                  class="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 border border-white/20
+                         flex items-center justify-center text-white text-sm hover:bg-red-900/80 transition-colors">
+            ✕
+          </button>
+          <div class="absolute bottom-2 left-3 text-xs text-green-400 font-medium" id="file-name-label"></div>
+        </div>
+      </div>
+
+      <input id="file-input" type="file" accept="image/*" capture="environment" class="hidden" />
+
+      <!-- Scan Button -->
+      <button id="scan-btn"
+              disabled
+              class="w-full py-3.5 rounded-2xl text-white font-bold text-sm
+                     flex items-center justify-center gap-2.5 tracking-wide">
+        <span id="scan-icon">🔍</span>
+        <span id="scan-label">Scan Plant</span>
+        <div id="scan-spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full spinner"></div>
+      </button>
+
+      <!-- Demo Mode Button -->
+      <button id="demo-btn"
+              class="w-full py-2.5 rounded-2xl text-green-400 font-semibold text-xs
+                     flex items-center justify-center gap-2 tracking-wide
+                     border border-green-800/60 bg-green-950/40
+                     hover:bg-green-900/40 hover:border-green-600/60 transition-all duration-200">
+        ▶ Demo Mode
+      </button>
+
+      <!-- Error Toast -->
+      <div id="error-box" class="hidden rounded-xl border border-red-700/50 bg-red-950/40 p-3">
+        <p class="text-red-400 text-xs font-semibold" id="error-text"></p>
+      </div>
+
+      <!-- ─── DIAGNOSIS RESULT CARD ────────────────── -->
+      <div id="result-card" class="hidden rounded-2xl border p-5 slide-up">
+
+        <!-- Card header: species + score ring -->
+        <div class="flex items-center gap-4 mb-4">
+          <!-- Score ring -->
+          <div class="relative shrink-0" style="width:110px;height:110px;">
+            <svg width="110" height="110" viewBox="0 0 110 110" class="shrink-0">
+              <circle cx="55" cy="55" r="45" stroke="#1f2d1f" stroke-width="8" fill="none"/>
+              <circle id="score-ring" cx="55" cy="55" r="45" stroke="#22c55e" stroke-width="8" fill="none"
+                      stroke-linecap="round" class="progress-ring-circle" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span id="score-display" class="text-2xl font-black text-white">0</span>
+              <span class="text-[9px] text-gray-500 font-medium">/ 100</span>
+            </div>
+          </div>
+
+          <!-- Species info -->
+          <div class="flex-1 min-w-0">
+            <div id="status-pill"
+                 class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
+                        text-[10px] font-bold uppercase tracking-wider mb-1.5">
+            </div>
+            <h2 id="species-name" class="text-lg font-black text-white truncate"></h2>
+            <p id="card-subtitle" class="text-xs text-gray-500 mt-0.5"></p>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-white/5 mb-4"></div>
+
+        <!-- Diagnosis -->
+        <div class="mb-3">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">
+            🔬 Diagnosis
+          </p>
+          <p id="diagnosis-text" class="text-sm text-gray-300 leading-relaxed"></p>
+        </div>
+
+        <!-- Prescription -->
+        <div class="prescription-box rounded-xl p-3">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-green-500 mb-1.5">
+            💊 Prescription
+          </p>
+          <p id="prescription-text" class="text-sm text-gray-200 leading-relaxed font-medium"></p>
+        </div>
+
+        <!-- Scan timestamp -->
+        <p id="scan-time" class="text-[10px] text-gray-600 mt-3 text-right"></p>
+      </div>
+
+      <!-- ─── SCAN HISTORY + BIODIVERSITY COUNTER ───── -->
+      <div id="history-section" class="hidden">
+        <div id="biodiversity-bar"
+             class="flex items-center gap-2.5 rounded-xl
+                    border border-green-800/40 bg-green-950/30 px-3 py-2.5 mb-2.5">
+          <span class="text-lg shrink-0">🌍</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-green-600">Biodiversity Score</p>
+            <p id="biodiversity-text" class="text-xs text-green-300 font-semibold mt-0.5">
+              Your area has <span id="unique-species-count" class="text-green-400 font-black">0</span> unique species tracked
+            </p>
+          </div>
+        </div>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-2">Recent Scans</p>
+        <div id="history-list" class="space-y-1.5"></div>
+      </div>
+
+      <!-- ─── CITY INTELLIGENCE PANEL ──────────────── -->
+      <div id="city-intel-panel"
+           class="rounded-2xl border border-green-800/40 bg-forest-800/60 overflow-hidden">
+        <!-- Header / toggle -->
+        <button id="city-intel-toggle"
+                class="w-full flex items-center justify-between px-4 py-3
+                       hover:bg-green-950/40 transition-colors duration-200">
+          <span class="text-sm font-bold text-white">🏙️ Amravati Green Intelligence</span>
+          <span id="city-intel-chevron"
+                class="text-green-500 text-xs font-black transition-transform duration-300">▲</span>
+        </button>
+        <!-- Collapsible body -->
+        <div id="city-intel-body" class="px-4 pb-4 space-y-2.5">
+          <!-- Stats grid -->
+          <div class="grid grid-cols-3 gap-2">
+            <!-- Total plants -->
+            <div class="rounded-xl bg-forest-700/60 border border-green-900/40 p-2.5 text-center">
+              <p class="text-[9px] text-gray-500 uppercase tracking-wider font-bold leading-tight">Total Plants</p>
+              <p id="ci-total" class="text-base font-black text-green-400 mt-0.5">0</p>
+              <p class="text-[9px] text-gray-600">tracked</p>
+            </div>
+            <!-- Avg health -->
+            <div class="rounded-xl bg-forest-700/60 border border-green-900/40 p-2.5 text-center">
+              <p class="text-[9px] text-gray-500 uppercase tracking-wider font-bold leading-tight">Avg Health</p>
+              <p id="ci-avg" class="text-base font-black text-green-400 mt-0.5">—</p>
+              <p class="text-[9px] text-gray-600">/100</p>
+            </div>
+            <!-- Healthiest zone -->
+            <div class="rounded-xl bg-forest-700/60 border border-green-900/40 p-2.5 text-center">
+              <p class="text-[9px] text-gray-500 uppercase tracking-wider font-bold leading-tight">Top Zone</p>
+              <p class="text-[10px] font-black text-green-400 mt-0.5 leading-tight">Panchasheel Nagar</p>
+            </div>
+          </div>
+          <!-- AI Insight line -->
+          <div class="rounded-xl bg-green-950/40 border border-green-800/30 px-3 py-2">
+            <p class="text-[10px] text-green-600 font-bold uppercase tracking-widest mb-0.5">AI Insight</p>
+            <p id="ci-insight" class="text-xs text-gray-300 leading-relaxed">Calculating…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer line -->
+      <footer class="text-center py-2 text-[10px] text-gray-600 font-semibold tracking-wider uppercase mt-4">
+        Powered by Gemini AI | Built for Biothon 2026
+      </footer>
+
+    </div><!-- end left panel -->
+
+    <!-- ─── RIGHT PANEL (MAP) (60%) ─────────────────── -->
+    <div id="right-panel" class="flex-1 relative">
+      <div id="map" class="w-full h-full"></div>
+
+      <!-- Legend -->
+      <div class="absolute bottom-6 left-3 z-[1000]
+                  bg-forest-800/90 backdrop-blur-sm border border-green-900/50
+                  rounded-xl px-3 py-2 shadow-xl space-y-1.5">
+        <p class="text-[9px] text-gray-600 uppercase tracking-wider font-bold">Health</p>
+        <div class="flex items-center gap-2 text-[10px] text-gray-300">
+          <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span> Healthy (71–100)
+        </div>
+        <div class="flex items-center gap-2 text-[10px] text-gray-300">
+          <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span> Stressed (41–70)
+        </div>
+        <div class="flex items-center gap-2 text-[10px] text-gray-300">
+          <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span> Critical (0–40)
+        </div>
+      </div>
+    </div><!-- end right panel -->
+
+  </div><!-- end app layout -->
+
+  <script src="app.js"></script>
+</body>
+</html>
