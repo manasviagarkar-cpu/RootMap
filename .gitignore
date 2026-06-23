@@ -1,13 +1,82 @@
-# Dependencies - never commit these
+# ------------------------------------------------------------------------------
+# RootMap Production-Grade GitIgnore
+# ------------------------------------------------------------------------------
+
+# Dependency Directories
 node_modules/
+jspm_packages/
+web_modules/
 
-# Environment files - contains secrets
-.env
+# Python Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+pyvenv.cfg
+.Python
+include/
+lib/
+libs/
+share/
+pip-selfcheck.json
 
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Logs
+# Python Cache & Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
 *.log
-npm-debug.log*
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environment Files (Contain Secrets)
+.env
+.env.local
+.env.*.local
+*.env
+.env.backup
+.env.production
+
+# Production Build & Dist Outputs
+dist/
+build/
+out/
+.next/
+.vercel/
+.serverless/
+
+# OS-Specific Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# Large Bioinformatics Datasets / Temp Output Logs
+data/*.fastq.gz
+data/*.fq.gz
+data/*.bam
+data/*.sam
+data/*.vcf
+pipeline_debug.log

@@ -1,0 +1,56 @@
+{
+  "malicious_exploit.fasta": {
+    "filename": "malicious_exploit.fasta",
+    "mtime": 1782225732.723868,
+    "size": 92,
+    "status": "rejected",
+    "error": "Forbidden command payload sequence detected: subprocess.run",
+    "processed_at": "2026-06-23T14:43:27Z"
+  },
+  "sample_rice.fastq": {
+    "filename": "sample_rice.fastq",
+    "file_size_bytes": 592,
+    "processed_at": "2026-06-23T14:43:27Z",
+    "sequence_count": 2,
+    "total_nucleotides": 200,
+    "gc_content_pct": 43.5,
+    "metrics": {
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1_score": 0.95,
+      "execution_time_seconds": 0.0003
+    },
+    "mapping_details": {
+      "reference_genome": "Oryza sativa (Rice IRGSP-1.0)",
+      "mapped_reads": 1,
+      "unmapped_reads": 1,
+      "alignment_rate_pct": 50.0
+    },
+    "mtime": 1782225726.4630253,
+    "size": 592,
+    "status": "success"
+  },
+  "sample_tomato.fasta": {
+    "filename": "sample_tomato.fasta",
+    "file_size_bytes": 1490,
+    "processed_at": "2026-06-23T14:43:27Z",
+    "sequence_count": 1,
+    "total_nucleotides": 1431,
+    "gc_content_pct": 45.42,
+    "metrics": {
+      "precision": 0.958,
+      "recall": 0.993,
+      "f1_score": 0.9752,
+      "execution_time_seconds": 0.0003
+    },
+    "mapping_details": {
+      "reference_genome": "Solanum lycopersicum (Tomato ITAG4.0)",
+      "mapped_reads": 0,
+      "unmapped_reads": 1,
+      "alignment_rate_pct": 0.0
+    },
+    "mtime": 1782225720.4998043,
+    "size": 1490,
+    "status": "success"
+  }
+}
