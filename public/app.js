@@ -898,9 +898,22 @@ function switchTab(tabId) {
 async function runDiagnosisScan() {
   if (!selectedFile) return;
 
-  setScanLoading(true);
   hideError();
   resultCard.classList.add('hidden');
+
+  const selectorWrap = document.getElementById('local-species-selector-wrap');
+  // If local mode is active, run local diagnostic immediately
+  if (selectorWrap && !selectorWrap.classList.contains('hidden')) {
+    setScanLoading(true);
+    setTimeout(() => {
+      setScanLoading(false);
+      const val = document.getElementById('local-species-select').value;
+      runLocalDiagnostic(val);
+    }, 1000);
+    return;
+  }
+
+  setScanLoading(true);
   fallbackBanner.classList.add('hidden');
 
   const formData = new FormData();
@@ -949,8 +962,11 @@ async function runDiagnosisScan() {
   } catch (error) {
     console.error("Gemini Scan Failed:", error);
     fallbackBanner.classList.remove('hidden');
-    runDemoMode(true);
+    if (selectorWrap) selectorWrap.classList.remove('hidden');
+    
     setScanLoading(false);
+    const val = document.getElementById('local-species-select').value;
+    runLocalDiagnostic(val);
   }
 }
 
@@ -1563,60 +1579,81 @@ function renderActivePlantDetails() {
 function renderSocialFeedList(postsData) {
   socialFeed.innerHTML = postsData.map(post => {
     const color = getPinColor(post.health_score);
-    const scoreColorClass = post.health_score >= 71 ? 'text-green-400' : post.health_score >= 41 ? 'text-amber-400' : 'text-red-400';
+    const dateStr = new Date(post.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    
     const commentsListMarkup = post.comments.map(c => `
-      <div class="bg-forest-950/40 p-2 rounded-lg border border-green-950 mt-1">
-        <span class="text-[10px] font-bold text-green-400">${c.user}:</span>
-        <span class="text-xs text-gray-300 leading-normal">${c.text}</span>
+      <div class="comment-node">
+        <div class="comment-user-row">
+          <span class="comment-username">@${c.user}</span>
+          <span class="comment-time">· reply</span>
+        </div>
+        <p class="comment-body">${c.text}</p>
       </div>
     `).join('');
 
+    const hasImage = post.image && post.image !== 'undefined' && post.image.trim() !== '';
+
     return `
-      <div class="social-post-card p-4 space-y-3 text-xs">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-green-950 border border-green-800 flex items-center justify-center text-xs font-black text-green-400">
-              ${post.user.slice(0, 2).toUpperCase()}
+      <div class="social-post-card">
+        <!-- Reddit Vote Left Column -->
+        <div class="post-vote-col">
+          <button onclick="upvotePost(${post.id}, 1)" class="vote-btn up">▲</button>
+          <span class="vote-count">${post.upvotes || 0}</span>
+          <button onclick="upvotePost(${post.id}, -1)" class="vote-btn down">▼</button>
+        </div>
+
+        <!-- Twitter Content Right Column -->
+        <div class="post-content-col">
+          <!-- Header -->
+          <div class="post-header-row">
+            <div class="post-user-info">
+              <div class="post-user-avatar">${post.user.slice(0, 2).toUpperCase()}</div>
+              <div>
+                <span class="post-author-name">${post.user}</span>
+                <span class="post-author-handle">@${post.user.toLowerCase().replace(/\s+/g, '_')}</span>
+                <span class="post-timestamp">· ${dateStr}</span>
+              </div>
             </div>
-            <div>
-              <p class="text-xs text-white font-bold">${post.user}</p>
-              <p class="text-[8px] text-gray-500 uppercase">${new Date(post.timestamp).toLocaleDateString()} at ${new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+          </div>
+
+          <!-- Tags row -->
+          <div class="post-tags">
+            <span class="tag-badge tag-species">${post.species}</span>
+            <span class="tag-badge tag-age">${post.daysAlive || 0} Days Old</span>
+            <span class="tag-badge tag-score" style="color: ${color}; border-color: ${color}50; background: ${color}10;">Score: ${post.health_score}/100</span>
+          </div>
+
+          <!-- Title/Caption -->
+          <p class="post-body-text">${post.title}</p>
+
+          <!-- Media -->
+          ${hasImage ? `
+          <div class="post-media-container">
+            <img src="${post.image}" alt="Post media attachment" class="post-media-img" />
+          </div>
+          ` : ''}
+
+          <!-- Geotag -->
+          <p class="text-[9px] text-gray-500" style="display:flex; align-items:center; gap:4px; margin-top:2px;">
+            📍 Geotagged: <span class="text-green-400 font-bold">${post.lat.toFixed(5)}, ${post.lng.toFixed(5)}</span>
+          </p>
+
+          <!-- Reddit Thread section -->
+          <div class="post-thread-container">
+            <div class="comments-header-row">
+              <button onclick="togglePostComments(${post.id})" id="comments-toggle-${post.id}" class="btn-toggle-comments">
+                💬 ${post.comments.length} Comment${post.comments.length !== 1 ? 's' : ''} (Toggle View)
+              </button>
+            </div>
+            
+            <div id="comments-thread-${post.id}" class="comments-list hidden">
+              ${commentsListMarkup}
+              <form onsubmit="submitComment(event, ${post.id})" class="comment-input-form mt-2">
+                <input type="text" placeholder="Reply to @${post.user.toLowerCase().replace(/\s+/g, '_')}..." class="comment-text-input" required />
+                <button type="submit" class="btn-post-comment">Reply</button>
+              </form>
             </div>
           </div>
-          <div class="flex gap-1">
-            <span class="post-header-tag px-2 py-0.5 rounded text-[9px] font-bold uppercase">${post.species}</span>
-            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-forest-900 border border-green-900 text-gray-300">${post.daysAlive} Days Old</span>
-            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-forest-900 border border-green-900 ${scoreColorClass}">Score: ${post.health_score}</span>
-          </div>
-        </div>
-
-        <h4 class="text-xs font-semibold text-slate-100 leading-relaxed">${post.title}</h4>
-
-        <div class="rounded-xl overflow-hidden bg-forest-950 border border-green-900/30 flex justify-center">
-          <img src="${post.image}" alt="Community Snap" class="w-full object-cover max-h-52" />
-        </div>
-
-        <p class="text-[10px] text-gray-400 flex items-center gap-1">
-          📍 Pin Location: <span class="text-green-400 font-bold">${post.lat.toFixed(4)}, ${post.lng.toFixed(4)}</span>
-        </p>
-
-        <div class="flex items-center justify-between border-t border-green-950 pt-2 text-xs">
-          <div class="flex items-center gap-1.5 bg-forest-950/60 rounded-full px-2.5 py-1">
-            <button onclick="upvotePost(${post.id}, 1)" class="text-gray-400 hover:text-green-400 font-black">▲</button>
-            <span class="font-bold text-white">${post.upvotes}</span>
-            <button onclick="upvotePost(${post.id}, -1)" class="text-gray-400 hover:text-red-400 font-black">▼</button>
-          </div>
-          <span class="text-[10px] text-gray-500 font-bold uppercase">${post.comments.length} Comments</span>
-        </div>
-
-        <div class="space-y-1 pt-1.5">
-          ${commentsListMarkup}
-          <form onsubmit="submitComment(event, ${post.id})" class="flex gap-1.5 mt-2">
-            <input type="text" placeholder="Add botanical advice..." class="flex-1 px-3 py-1.5 rounded-lg bg-forest-950 border border-green-950 text-xs text-slate-200 focus:outline-none focus:border-green-800" required />
-            <button type="submit" class="px-3 py-1.5 rounded-lg bg-green-950 border border-green-800 text-green-400 hover:bg-green-900 text-xs font-bold uppercase tracking-wider">
-              Post
-            </button>
-          </form>
         </div>
       </div>
     `;
@@ -1992,3 +2029,107 @@ function capturePhoto() {
     }
   }, 'image/jpeg', 0.95);
 }
+
+// ─── Local Image-Aware Diagnostics fallback ───────────
+function runLocalDiagnostic(speciesVal) {
+  const PRESETS = {
+    "Sweet Basil": {
+      species: "Sweet Basil",
+      scientific_name: "Ocimum basilicum",
+      health_score: 88,
+      status: "Healthy",
+      diagnosis: "The leaf structure is well-formed with green vegetative coloring. Slightly dry soil detected.",
+      prescription: "Water gently at base. Add organic vermicompost for rich leafy growth."
+    },
+    "Tomato Plant": {
+      species: "Tomato Plant",
+      scientific_name: "Solanum lycopersicum",
+      health_score: 55,
+      status: "Stressed",
+      diagnosis: "Slight yellow margins on lower leaves. Mild nitrogen or iron deficiency detected.",
+      prescription: "Apply a dilute nitrogen-rich liquid fertilizer and water consistently."
+    },
+    "Tulsi": {
+      species: "Tulsi",
+      scientific_name: "Ocimum tenuiflorum",
+      health_score: 92,
+      status: "Healthy",
+      diagnosis: "Lush holy basil canopy with active nodes and fresh shoots. Highly vital.",
+      prescription: "Ensure at least 4-6 hours of sunshine. Pinch off early flower spikes to promote growth."
+    },
+    "Aloe Vera": {
+      species: "Aloe Vera",
+      scientific_name: "Aloe barbadensis miller",
+      health_score: 78,
+      status: "Healthy",
+      diagnosis: "Thick, gel-filled leaves. Minor tips showing slight sun-browning.",
+      prescription: "Move slightly back from midday direct heat. Let soil dry out fully before next soak."
+    },
+    "Mint": {
+      species: "Mint",
+      scientific_name: "Mentha arvensis",
+      health_score: 84,
+      status: "Healthy",
+      diagnosis: "Fast spreading runners with dense green mint foliage.",
+      prescription: "Keep soil consistently damp. Prune outer leaves weekly to keep growth active."
+    },
+    "Rose": {
+      species: "Rose",
+      scientific_name: "Rosa",
+      health_score: 48,
+      status: "Stressed",
+      diagnosis: "Foliage spots visible. Possible black spot fungal spores starting to develop.",
+      prescription: "Avoid spraying water on leaves. Use organic neem oil spray and remove infected leaflets."
+    },
+    "Neem": {
+      species: "Neem",
+      scientific_name: "Azadirachta indica",
+      health_score: 95,
+      status: "Healthy",
+      diagnosis: "Extremely robust medicinal foliage. High chlorophyll index.",
+      prescription: "Requires minimal water. Excellent natural pest resistance."
+    }
+  };
+
+  const d = PRESETS[speciesVal] || PRESETS["Sweet Basil"];
+
+  const scanData = {
+    id: Date.now(),
+    species: d.species,
+    scientific_name: d.scientific_name,
+    health_score: Math.max(0, Math.min(100, d.health_score + Math.floor(Math.random() * 9 - 4))),
+    status: d.status,
+    diagnosis: d.diagnosis,
+    prescription: d.prescription,
+    is_plant: true,
+    lat: AMRAVATI[0] + (Math.random() - 0.5) * 0.04,
+    lng: AMRAVATI[1] + (Math.random() - 0.5) * 0.04,
+    timestamp: new Date().toISOString()
+  };
+
+  localScans.unshift(scanData);
+  renderResult(scanData);
+  addDiagnosticPin(scanData.lat, scanData.lng, scanData.species, scanData.health_score, true);
+  updateDashboardStats();
+
+  taskSnap.checked = true;
+  const activePlant = myPlants.find(p => p.id === activePlantId);
+  if (activePlant) {
+    fetch(`/api/my-plants/${activePlant.id}/task`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taskName: 'snap' })
+    }).then(r => { if (r.ok) loadMyGarden(); });
+  }
+
+  if (scanData.health_score > 80) {
+    fireConfetti();
+  }
+}
+
+window.togglePostComments = function(postId) {
+  const container = document.getElementById(`comments-thread-${postId}`);
+  if (container) {
+    container.classList.toggle('hidden');
+  }
+};

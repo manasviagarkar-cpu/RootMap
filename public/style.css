@@ -1246,3 +1246,313 @@ body {
   font-size: 0.65rem;
   color: var(--text-muted);
 }
+
+/* ─── Custom Camera Dropdown Wrapper ─── */
+.local-species-selector-wrap {
+  padding: 12px;
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+/* ─── Premium Reddit/Twitter Hybrid Feed ─── */
+.social-post-card {
+  display: flex;
+  gap: 16px;
+  background: rgba(13, 23, 13, 0.6);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.social-post-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-2);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 16px rgba(34,197,94,0.04);
+}
+
+/* Reddit voting column */
+.post-vote-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.vote-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+}
+
+.vote-btn:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.vote-btn.up:hover, .vote-btn.up.active {
+  color: #f97316; /* Reddit orange-red */
+  background: rgba(249,115,22,0.1);
+}
+
+.vote-btn.down:hover, .vote-btn.down.active {
+  color: #3b82f6; /* Reddit blue */
+  background: rgba(59,130,246,0.1);
+}
+
+.vote-count {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* Twitter content container */
+.post-content-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.post-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.post-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.post-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green-600), var(--green-500));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: white;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 12px rgba(34,197,94,0.2);
+}
+
+.post-author-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: white;
+}
+
+.post-author-handle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.post-timestamp {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.post-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag-badge {
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tag-species {
+  background: var(--bg-4);
+  border: 1px solid var(--border-1);
+  color: var(--green-400);
+}
+
+.tag-age {
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid var(--border-1);
+  color: var(--text-secondary);
+}
+
+.tag-score {
+  border: 1px solid currentColor;
+}
+
+.post-body-text {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.post-media-container {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-1);
+  background: #000;
+  max-height: 240px;
+}
+
+.post-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Reddit comment thread styling */
+.post-thread-container {
+  border-top: 1px solid var(--border-1);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.comments-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.btn-toggle-comments {
+  background: transparent;
+  border: none;
+  color: var(--green-400);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-toggle-comments:hover {
+  text-decoration: underline;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border-1);
+}
+
+.comment-node {
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.comment-user-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.comment-username {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--green-400);
+}
+
+.comment-time {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.comment-body {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.comment-input-form {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-text-input {
+  flex: 1;
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: white;
+  outline: none;
+}
+
+.comment-text-input:focus {
+  border-color: var(--green-500);
+}
+
+.btn-post-comment {
+  background: var(--green-700);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-post-comment:hover {
+  background: var(--green-600);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .social-post-card {
+    gap: 8px;
+    padding: 12px;
+  }
+  .post-vote-col {
+    width: 24px;
+  }
+  .vote-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.95rem;
+  }
+  .post-user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+  .split-left {
+    max-height: 55vh;
+  }
+  .split-right {
+    height: 45vh;
+  }
+  .map-container {
+    height: 100% !important;
+  }
+}

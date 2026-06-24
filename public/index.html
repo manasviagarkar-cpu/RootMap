@@ -117,6 +117,20 @@
           </div>
           <input id="file-input" type="file" accept="image/*" capture="environment" class="hidden" />
 
+          <!-- Local Mode Species Dropdown -->
+          <div id="local-species-selector-wrap" class="local-species-selector-wrap hidden mt-2">
+            <label class="form-label" style="margin-bottom: 4px; display: block; font-size: 0.65rem;">⚙️ Offline/Local Mode: What plant is in this picture?</label>
+            <select id="local-species-select" class="form-input">
+              <option value="Sweet Basil">🌱 Sweet Basil</option>
+              <option value="Tomato Plant">🍅 Tomato Plant</option>
+              <option value="Tulsi">🌿 Balcony Tulsi</option>
+              <option value="Aloe Vera">🪴 Aloe Vera</option>
+              <option value="Mint">🍃 Mint</option>
+              <option value="Rose">🌹 Rose</option>
+              <option value="Neem">🌳 Neem</option>
+            </select>
+          </div>
+
           <!-- Action Buttons -->
           <div class="btn-row">
             <button id="scan-btn" class="btn-primary btn-scan" disabled>
