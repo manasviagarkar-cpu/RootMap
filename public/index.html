@@ -379,6 +379,24 @@
           <!-- Left: Plant Selector + Controls -->
           <div class="lifecycle-left">
 
+            <!-- Grower Lvl & XP Card -->
+            <div class="card" id="grower-profile-card">
+              <div class="card-header">
+                <span class="card-icon">🎮</span>
+                <h3 class="card-title">Grower Level & XP</h3>
+                <span id="grower-level-badge" class="stage-badge">Lvl 1</span>
+              </div>
+              <div class="xp-progress-container">
+                <div class="xp-progress-bar">
+                  <div id="xp-progress-fill" class="xp-progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="xp-labels">
+                  <span id="xp-text" class="xp-text">0 / 100 XP</span>
+                  <span class="xp-hint">Gain +15 XP for tasks · +50 XP for stages!</span>
+                </div>
+              </div>
+            </div>
+
             <div class="card" id="lifecycle-select-card">
               <div class="card-header">
                 <span class="card-icon">🪴</span>
@@ -433,6 +451,19 @@
               <div class="stage-controls">
                 <span id="growth-time-badge" class="growth-time">Age: 0 days</span>
                 <button id="btn-advance-stage" class="btn-advance">Advance Stage ➔</button>
+              </div>
+
+              <!-- Live Automatic Growth Engine -->
+              <div class="simulation-controller">
+                <p class="sim-title">⏳ Auto Grow Simulation Journey</p>
+                <div class="sim-row">
+                  <button type="button" id="btn-toggle-growth" class="btn-ghost-sm">▶ Start Auto Grow</button>
+                  <button type="button" id="btn-speed-growth" class="btn-ghost-sm">⚡ Speed: 1x</button>
+                </div>
+                <div class="next-stage-countdown">
+                  <span>Next stage in:</span>
+                  <span id="stage-countdown-val" class="countdown-val">--</span>
+                </div>
               </div>
             </div>
 

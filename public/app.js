@@ -172,6 +172,15 @@ const closeInboxModal = document.getElementById('close-inbox-modal');
 const inboxEmailContent = document.getElementById('inbox-email-content');
 const dismissInboxBtn = document.getElementById('dismiss-inbox-btn');
 
+// Grower Gamified RPG state variables
+let growerLvl = parseInt(localStorage.getItem('growerLvl')) || 1;
+let growerXp = parseInt(localStorage.getItem('growerXp')) || 0;
+
+// Simulation engine state variables
+let isAutoGrowing = false;
+let growthInterval = null;
+let growthSpeed = 1; // 1 day per 5 seconds
+
 // ─── Initialization ──────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
@@ -179,6 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initThreeVisualizer();
   loadInitialData();
   fetchWeatherForecast();
+  updateXpUi();
+  initGrowthController();
   
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
@@ -410,10 +421,34 @@ async function loadLeaderboard() {
     const res = await fetch('/api/leaderboard');
     if (res.ok) {
       const list = await res.json();
-      const tbody = document.getElementById('leaderboard-list');
       
+      // 1. Populate top 3 podium
+      const podiumRow = document.getElementById('podium-row');
+      if (podiumRow && list.length >= 3) {
+        const top3 = list.slice(0, 3);
+        // Podium order: Silver (2nd) on left, Gold (1st) in center, Bronze (3rd) on right
+        const displayOrder = [top3[1], top3[0], top3[2]];
+        
+        podiumRow.innerHTML = displayOrder.map(item => {
+          const rankClass = item.rank === 1 ? 'rank-1' : item.rank === 2 ? 'rank-2' : 'rank-3';
+          const medalIcon = item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉';
+          const score = item.plantsCount * item.avgHealth;
+          return `
+            <div class="podium-card ${rankClass}">
+              <div class="podium-badge">${medalIcon}</div>
+              <p class="podium-user">${item.user}</p>
+              <p class="podium-score">${score} XP</p>
+              <p class="podium-stats">${item.plantsCount} Plants · ${item.avgHealth}% Health</p>
+              <p class="text-[9px] text-orange-400 font-extrabold">🔥 ${item.streak || 0}-Day Streak</p>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Populate main table
+      const tbody = document.getElementById('leaderboard-list');
       tbody.innerHTML = list.map(item => {
-        const isUser = item.user.includes("Aman");
+        const isUser = item.user.includes("Aman") || item.user.includes("You");
         const userClass = isUser ? 'text-green-400 font-bold bg-green-950/20' : 'text-slate-200';
         
         let medal = item.rank;
@@ -421,12 +456,16 @@ async function loadLeaderboard() {
         else if (item.rank === 2) medal = '🥈';
         else if (item.rank === 3) medal = '🥉';
 
+        const score = item.plantsCount * item.avgHealth;
+
         return `
           <tr class="border-b border-green-950 hover:bg-forest-900/30 transition-colors ${userClass}">
             <td class="p-2.5 text-center font-bold">${medal}</td>
             <td class="p-2.5 flex items-center gap-1.5 font-medium">${item.user}</td>
             <td class="p-2.5 text-center font-bold">${item.plantsCount}</td>
             <td class="p-2.5 text-center font-bold text-green-400">${item.avgHealth}%</td>
+            <td class="p-2.5 text-center font-bold text-orange-400">🔥 ${item.streak || 0}</td>
+            <td class="p-2.5 text-center font-bold text-white">${score}</td>
           </tr>
         `;
       }).join('');
@@ -507,6 +546,11 @@ function initListeners() {
           
           renderActivePlantDetails();
           loadLeaderboard();
+
+          // Reward XP if task checked
+          if (updated.dailyTasks[taskName]) {
+            gainXP(15);
+          }
         }
       } catch (err) {
         console.error("Task update error:", err);
@@ -541,6 +585,7 @@ function initListeners() {
           }
 
           fireConfetti();
+          gainXP(50);
         }
       } catch (err) {
         console.error("Advance stage error:", err);
@@ -574,6 +619,7 @@ function initListeners() {
         }
 
         fireConfetti();
+        gainXP(50);
       }
     } catch (err) {
       console.error("Advance stage error:", err);
@@ -1465,6 +1511,37 @@ function renderActivePlantDetails() {
   soilNpk.textContent = preset.npk;
   soilMix.textContent = preset.mix;
 
+  const stageCareContent = document.getElementById('stage-care-content');
+  if (stageCareContent) {
+    const STAGE_GUIDES = [
+      { emoji: "🌰", title: "Seed Stage (Days 0-2)", text: "Maintain high moisture. Keep warm and out of direct harsh sun. Ensure potting mix has fine cocopeat." },
+      { emoji: "🌱", title: "Sprout Stage (Days 3-6)", text: "First leaves appear! Keep soil damp but not soaked. Introduce morning ambient sun." },
+      { emoji: "🪴", title: "Seedling Stage (Days 7-13)", text: "Strong roots forming. Thin out weaker shoots. Ensure optimal nitrogen in soil mix." },
+      { emoji: "🌿", title: "Vegetative Stage (Days 14-20)", text: "Massive foliage growth. Water regularly. Prune topmost tips to promote bushiness." },
+      { emoji: "🌸", title: "Flowering Stage (Days 21-27)", text: "Buds blooming! Add phosphorus-rich nutrients (like bone meal/manure). Prune yellow leaves." },
+      { emoji: "🍅", title: "Fruiting Stage (Day 28+)", text: "Fruits/seeds ripening! Ensure full sunlight (6+ hours). Keep soil moist but avoid overhead watering." }
+    ];
+    
+    const currentGuide = STAGE_GUIDES[p.stage - 1] || STAGE_GUIDES[0];
+    stageCareContent.innerHTML = `
+      <div class="care-item">
+        <span class="care-emoji">${currentGuide.emoji}</span>
+        <div>
+          <p class="care-title">${currentGuide.title}</p>
+          <p class="care-detail">${currentGuide.text}</p>
+        </div>
+      </div>
+      <div class="care-item mt-2">
+        <span class="care-emoji">🪨</span>
+        <div>
+          <p class="care-title">Ideal Soil Profile</p>
+          <p class="care-detail">pH Level: <strong>${preset.ph}</strong> · NPK: <strong>${preset.npk}</strong></p>
+          <p class="care-detail" style="color:var(--text-secondary); margin-top:2px;">${preset.mix}</p>
+        </div>
+      </div>
+    `;
+  }
+
   if (p.streak >= 5) {
     document.getElementById('badge-streak').classList.remove('opacity-40');
     document.getElementById('badge-streak').querySelector('p:last-of-type').textContent = "Unlocked";
@@ -1700,6 +1777,161 @@ function fireConfetti() {
       spread: 70,
       origin: { y: 0.6 }
     });
+  }
+}
+
+// ─── Gamification & Auto Grow Simulation Helpers ───────
+function gainXP(amount) {
+  growerXp += amount;
+  if (growerXp >= 100) {
+    growerLvl += 1;
+    growerXp = growerXp - 100;
+    fireConfetti();
+    alert(`🎉 LEVEL UP! You reached Grower Level ${growerLvl}! Keep growing!`);
+  }
+  updateXpUi();
+}
+
+function updateXpUi() {
+  const badge = document.getElementById('grower-level-badge');
+  const text = document.getElementById('xp-text');
+  const fill = document.getElementById('xp-progress-fill');
+  if (badge) badge.textContent = `Lvl ${growerLvl}`;
+  if (text) text.textContent = `${growerXp} / 100 XP`;
+  if (fill) fill.style.width = `${growerXp}%`;
+  
+  localStorage.setItem('growerLvl', growerLvl);
+  localStorage.setItem('growerXp', growerXp);
+}
+
+function initGrowthController() {
+  const btnToggle = document.getElementById('btn-toggle-growth');
+  const btnSpeed = document.getElementById('btn-speed-growth');
+  
+  if (btnToggle) btnToggle.addEventListener('click', toggleAutoGrowth);
+  if (btnSpeed) btnSpeed.addEventListener('click', speedAutoGrowth);
+  
+  updateCountdownUi();
+}
+
+function toggleAutoGrowth() {
+  const btnToggle = document.getElementById('btn-toggle-growth');
+  if (!activePlantId) {
+    alert("Please select or add a plant in 'My Garden' to start the simulation journey!");
+    return;
+  }
+  
+  if (isAutoGrowing) {
+    clearInterval(growthInterval);
+    isAutoGrowing = false;
+    if (btnToggle) {
+      btnToggle.textContent = "▶ Resume Auto Grow";
+      btnToggle.style.backgroundColor = "transparent";
+    }
+  } else {
+    isAutoGrowing = true;
+    if (btnToggle) {
+      btnToggle.textContent = "⏸ Pause Auto Grow";
+      btnToggle.style.backgroundColor = "rgba(34, 197, 94, 0.25)";
+    }
+    runAutoGrowthLoop();
+  }
+}
+
+function speedAutoGrowth() {
+  const btnSpeed = document.getElementById('btn-speed-growth');
+  if (growthSpeed === 1) {
+    growthSpeed = 5;
+  } else if (growthSpeed === 5) {
+    growthSpeed = 10;
+  } else {
+    growthSpeed = 1;
+  }
+  if (btnSpeed) btnSpeed.textContent = `⚡ Speed: ${growthSpeed}x`;
+  
+  if (isAutoGrowing) {
+    clearInterval(growthInterval);
+    runAutoGrowthLoop();
+  }
+}
+
+function runAutoGrowthLoop() {
+  const intervalTime = growthSpeed === 1 ? 5000 : growthSpeed === 5 ? 2000 : 500;
+  growthInterval = setInterval(autoGrowthTick, intervalTime);
+}
+
+async function autoGrowthTick() {
+  const activePlant = myPlants.find(p => p.id === activePlantId);
+  if (!activePlant) {
+    toggleAutoGrowth();
+    return;
+  }
+  
+  activePlant.daysAlive += 1;
+  
+  let newStage = 1;
+  if (activePlant.daysAlive >= 28) newStage = 6;
+  else if (activePlant.daysAlive >= 21) newStage = 5;
+  else if (activePlant.daysAlive >= 14) newStage = 4;
+  else if (activePlant.daysAlive >= 7) newStage = 3;
+  else if (activePlant.daysAlive >= 3) newStage = 2;
+  
+  const stageChanged = newStage !== activePlant.stage;
+  
+  if (stageChanged) {
+    activePlant.stage = newStage;
+    try {
+      const res = await fetch(`/api/my-plants/${activePlant.id}/stage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: newStage })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const idx = myPlants.findIndex(p => p.id === data.plant.id);
+        if (idx !== -1) myPlants[idx] = data.plant;
+        
+        gainXP(50);
+        
+        if (data.emailSent) {
+          inboxEmailContent.innerHTML = data.emailSent.html;
+          inboxModal.classList.remove('hidden');
+        }
+      }
+    } catch (e) {
+      console.error("Auto growth stage advance error:", e);
+    }
+  }
+  
+  renderActivePlantDetails();
+  renderGardenSelectorList();
+  updateCountdownUi();
+}
+
+function updateCountdownUi() {
+  const activePlant = myPlants.find(p => p.id === activePlantId);
+  const valSpan = document.getElementById('stage-countdown-val');
+  if (!valSpan) return;
+  
+  if (!activePlant) {
+    valSpan.textContent = "--";
+    return;
+  }
+  
+  const age = activePlant.daysAlive;
+  let nextTarget = 0;
+  
+  if (age < 3) nextTarget = 3;
+  else if (age < 7) nextTarget = 7;
+  else if (age < 14) nextTarget = 14;
+  else if (age < 21) nextTarget = 21;
+  else if (age < 28) nextTarget = 28;
+  
+  if (nextTarget === 0) {
+    valSpan.textContent = "Fully Grown! 🍅";
+  } else {
+    const diff = nextTarget - age;
+    valSpan.textContent = `${diff} day${diff > 1 ? 's' : ''}`;
   }
 }
 
