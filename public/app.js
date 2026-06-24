@@ -961,8 +961,14 @@ async function runDiagnosisScan() {
 
   } catch (error) {
     console.error("Gemini Scan Failed:", error);
-    fallbackBanner.classList.remove('hidden');
     if (selectorWrap) selectorWrap.classList.remove('hidden');
+    
+    // Dynamically show the specific error message on the fallback banner
+    const bannerSpan = fallbackBanner.querySelector('span');
+    if (bannerSpan) {
+      bannerSpan.textContent = `⚠️ Local Fallback Mode: ${error.message}`;
+    }
+    fallbackBanner.classList.remove('hidden');
     
     setScanLoading(false);
     const val = document.getElementById('local-species-select').value;
