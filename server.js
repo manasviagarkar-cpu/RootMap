@@ -59,7 +59,7 @@ app.post('/api/scan', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
     if (!process.env.GEMINI_API_KEY) return res.status(500).json({ error: 'Gemini API key not configured.' });
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
     const prompt = `You are a plant health expert. Analyze this plant image and respond ONLY with valid JSON, no markdown:
 {
   "species": "common plant name",
