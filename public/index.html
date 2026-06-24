@@ -3,295 +3,702 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌿 RootMap — Plant Health AI | Biothon 2026</title>
-  <meta name="description" content="RootMap uses Gemini Vision AI to diagnose plant health and map biodiversity across your city. Upload a photo, get an instant diagnosis, and pin your plant on the live city map." />
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <title>🌿 RootMap — AI Plant Growth & Community Hub</title>
+  <meta name="description" content="RootMap: The intelligent plant companion. Track growth with 3D models, get AI health diagnostics, receive smart weather alerts, and share your plant journey in a competitive community." />
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { inter: ['Inter', 'sans-serif'] },
-          colors: {
-            forest: {
-              950: '#040d04',
-              900: '#0f1a0f',
-              800: '#152315',
-              700: '#1d321d',
-              600: '#274227',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
   <link rel="stylesheet" href="style.css" />
 </head>
+<body>
 
-<body class="min-h-screen text-slate-100 bg-[#0f1a0f] font-inter">
-
-  <!-- Fallback Warning Banner (Switching to Demo Mode) -->
-  <div id="fallback-banner"
-       class="hidden w-full px-4 py-2.5 flex items-center gap-2.5
-              bg-amber-950/90 border-b border-amber-700/60 z-50">
-    <span class="text-amber-400 text-base shrink-0">⚠️</span>
-    <p class="text-amber-300 text-xs font-semibold flex-1">
-      Live scan unavailable — switching to Demo Mode
-    </p>
-    <button onclick="document.getElementById('fallback-banner').classList.add('hidden')"
-            class="text-amber-500 hover:text-amber-300 text-sm shrink-0">✕</button>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════
        NAVBAR
-  ═══════════════════════════════════════════════════ -->
-  <nav class="h-16 flex items-center justify-between px-4 md:px-6
-              bg-forest-800/80 backdrop-blur-md
-              border-b border-green-900/60 sticky top-0 z-50">
-
-    <!-- Logo -->
-    <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-700
-                  flex items-center justify-center text-lg shadow-lg shadow-green-900/50">
-        🌿
-      </div>
+       ══════════════════════════════════════════════════ -->
+  <nav id="navbar">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">🌿</div>
       <div>
-        <span class="text-lg font-black tracking-tight text-green-400">Root</span><span class="text-lg font-black tracking-tight text-white">Map</span>
-        <div class="text-[9px] text-gray-500 font-medium -mt-1 tracking-widest uppercase">Plant Health AI</div>
+        <div class="nav-logo-text"><span class="text-green">Root</span>Map</div>
+        <div class="nav-logo-sub">AI Plant Companion</div>
       </div>
     </div>
 
-    <!-- Scan Counter Badge -->
-    <div class="flex items-center gap-3">
-      <div id="scan-badge"
-           class="flex items-center gap-1.5 px-3 py-1.5
-                  bg-green-950/60 border border-green-800/50 rounded-full
-                  text-xs font-bold text-green-400 cursor-default select-none">
-        📍 <span id="nav-scan-count">0 Scans</span>
+    <div class="nav-tabs" id="nav-tabs">
+      <button class="nav-tab active" data-tab="diagnosis" id="tab-diagnosis">
+        <span class="tab-icon">🔬</span>
+        <span class="tab-label">AI Diagnosis</span>
+      </button>
+      <button class="nav-tab" data-tab="garden" id="tab-garden">
+        <span class="tab-icon">🪴</span>
+        <span class="tab-label">My Garden</span>
+      </button>
+      <button class="nav-tab" data-tab="lifecycle" id="tab-lifecycle">
+        <span class="tab-icon">🌱</span>
+        <span class="tab-label">Life Cycle</span>
+      </button>
+      <button class="nav-tab" data-tab="community" id="tab-community">
+        <span class="tab-icon">🌍</span>
+        <span class="tab-label">Community</span>
+      </button>
+      <button class="nav-tab" data-tab="leaderboard" id="tab-leaderboard">
+        <span class="tab-icon">🏆</span>
+        <span class="tab-label">Leaderboard</span>
+      </button>
+    </div>
+
+    <div class="nav-right">
+      <div class="nav-badge" id="scan-count-badge">
+        <span>📍</span> <span id="nav-scan-count">0</span> Scans
       </div>
     </div>
   </nav>
 
-  <!-- ═══════════════════════════════════════════════════
-       MAIN LAYOUT
-  ═══════════════════════════════════════════════════ -->
-  <div id="app-layout" class="flex" style="height: calc(100vh - 64px);">
+  <!-- ══════════════════════════════════════════════════
+       MAIN APP CONTAINER
+       ══════════════════════════════════════════════════ -->
+  <main id="app-main">
 
-    <!-- ─── LEFT PANEL (40%) ────────────────────────── -->
-    <div id="left-panel" class="w-2/5 p-4 md:p-5 space-y-4 bg-forest-900/50 border-r border-green-900/40 overflow-y-auto">
+    <!-- ─────────────────────────────────────────────────
+         TAB 1: AI DIAGNOSIS
+         ───────────────────────────────────────────────── -->
+    <section id="tab-content-diagnosis" class="tab-content active">
+      <div class="split-layout">
 
-      <!-- Upload Zone -->
-      <div id="upload-zone"
-           class="rounded-2xl cursor-pointer relative overflow-hidden
-                  bg-forest-800/60 border-2 border-dashed border-gray-700 transition-all duration-300"
-           style="min-height: 160px;">
+        <!-- Left: Scan Panel -->
+        <div class="split-left" id="diagnosis-left">
 
-        <!-- Default state -->
-        <div id="upload-default" class="flex flex-col items-center justify-center gap-3 p-8 text-center">
-          <div class="w-16 h-16 rounded-2xl bg-green-950/60 border border-green-800/50
-                      flex items-center justify-center text-3xl transition-transform">
-            📷
+          <div class="section-header">
+            <h1 class="section-title">🔬 AI Plant Diagnosis</h1>
+            <p class="section-sub">Upload a photo — our AI instantly diagnoses plant health and prescribes care</p>
           </div>
+
+          <!-- Fallback Banner -->
+          <div id="fallback-banner" class="fallback-banner hidden">
+            <span>ℹ️ Local Mode: Gemini API Key not configured. Using local AI fallback.</span>
+          </div>
+
+          <!-- Upload Zone -->
+          <div id="upload-zone" class="upload-zone">
+            <div id="upload-default" class="upload-default">
+              <div class="upload-icon">📷</div>
+              <p class="upload-title">Drop your plant photo here</p>
+              <p class="upload-hint">or tap to select from gallery · Camera supported</p>
+            </div>
+
+            <!-- Live Camera Stream -->
+            <div id="camera-container" class="camera-container hidden">
+              <video id="camera-stream" autoplay playsinline class="camera-stream"></video>
+              <div class="camera-overlay"></div>
+              <div class="camera-controls">
+                <button type="button" id="btn-capture" class="btn-capture-snap">📷 Snap Photo</button>
+                <button type="button" id="btn-close-camera" class="btn-camera-close">✕ Close</button>
+              </div>
+            </div>
+
+            <div id="upload-preview" class="upload-preview hidden">
+              <img id="preview-img" alt="Plant preview" />
+              <div class="preview-overlay"></div>
+              <button id="clear-btn" class="clear-btn">✕</button>
+              <div id="file-name-label" class="file-name-label"></div>
+            </div>
+          </div>
+          <input id="file-input" type="file" accept="image/*" capture="environment" class="hidden" />
+
+          <!-- Action Buttons -->
+          <div class="btn-row">
+            <button id="scan-btn" class="btn-primary btn-scan" disabled>
+              <span id="scan-icon">🔍</span>
+              <span id="scan-label">Scan Plant</span>
+              <div id="scan-spinner" class="spinner hidden"></div>
+            </button>
+            <button id="camera-btn" class="btn-ghost">📷 Live Camera</button>
+            <button id="demo-btn" class="btn-ghost">▶ Demo</button>
+          </div>
+
+          <!-- Error -->
+          <div id="error-box" class="error-box hidden">
+            <span>⚠️</span> <span id="error-text"></span>
+          </div>
+
+          <!-- Result Card -->
+          <div id="result-card" class="result-card hidden slide-up">
+            <div class="result-card-header">
+              <div class="score-ring-wrap">
+                <svg width="100" height="100" viewBox="0 0 110 110">
+                  <circle cx="55" cy="55" r="45" stroke="#1a2e1a" stroke-width="8" fill="none"/>
+                  <circle id="score-ring" cx="55" cy="55" r="45" stroke="#22c55e" stroke-width="8" fill="none"
+                          stroke-linecap="round" class="progress-ring"/>
+                </svg>
+                <div class="score-center">
+                  <span id="score-display" class="score-number">0</span>
+                  <span class="score-denom">/100</span>
+                </div>
+              </div>
+              <div class="result-info">
+                <span id="status-pill" class="status-pill"></span>
+                <h2 id="species-name" class="species-name"></h2>
+                <p id="card-subtitle" class="card-subtitle"></p>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="diagnosis-block">
+              <p class="block-label">🔬 Diagnosis</p>
+              <p id="diagnosis-text" class="block-text"></p>
+            </div>
+            <div class="prescription-block">
+              <p class="block-label green">💊 Prescription</p>
+              <p id="prescription-text" class="block-text"></p>
+            </div>
+          </div>
+
+          <!-- Scan History -->
+          <div id="history-section" class="history-section hidden">
+            <div class="biodiversity-bar">
+              <span class="bio-icon">🌍</span>
+              <div>
+                <p class="bio-label">Biodiversity Score</p>
+                <p class="bio-value">Your area has <span id="unique-species-count">0</span> unique species tracked</p>
+              </div>
+            </div>
+            <p class="section-tiny-label">Recent Scans</p>
+            <div id="history-list" class="history-list"></div>
+          </div>
+
+          <!-- City Stats -->
+          <div class="city-stats-panel">
+            <button id="city-intel-toggle" class="city-stats-toggle">
+              <span>🏙️ Amravati Green Intelligence</span>
+              <span id="city-intel-chevron" class="chevron">▲</span>
+            </button>
+            <div id="city-intel-body" class="city-stats-body">
+              <div class="stats-grid3">
+                <div class="stat-box">
+                  <p class="stat-label">Total Plants</p>
+                  <p id="ci-total" class="stat-value">0</p>
+                  <p class="stat-sub">tracked</p>
+                </div>
+                <div class="stat-box">
+                  <p class="stat-label">Avg Health</p>
+                  <p id="ci-avg" class="stat-value">—</p>
+                  <p class="stat-sub">/100</p>
+                </div>
+                <div class="stat-box">
+                  <p class="stat-label">Top Zone</p>
+                  <p class="stat-value-sm">Panchasheel Nagar</p>
+                </div>
+              </div>
+              <div class="insight-box">
+                <p class="insight-label">AI Insight</p>
+                <p id="ci-insight" class="insight-text">Calculating urban biodiversity…</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Map -->
+        <div class="split-right" id="diagnosis-map-panel">
+          <div id="map" class="map-container"></div>
+          <!-- Map Overlays -->
+          <div class="map-controls">
+            <div class="map-filters-panel">
+              <p class="map-filter-title">Map Filters</p>
+              <label class="filter-row"><input type="checkbox" id="filter-scans" checked /> Diagnostic Scans</label>
+              <label class="filter-row"><input type="checkbox" id="filter-social" checked /> Community Snaps</label>
+              <label class="filter-row"><input type="checkbox" id="filter-nurseries" checked /> Local Nurseries</label>
+            </div>
+            <button id="map-toggle-scope" class="btn-map-scope">🏙️ City Wide</button>
+          </div>
+          <div class="map-legend">
+            <p class="legend-title">Pin Legend</p>
+            <div class="legend-item"><span class="dot green"></span> Healthy Scan</div>
+            <div class="legend-item"><span class="dot amber"></span> Stressed Scan</div>
+            <div class="legend-item"><span class="dot red"></span> Critical Scan</div>
+            <div class="legend-item"><span class="dot purple"></span> Community Snap</div>
+            <div class="legend-item"><span class="dot blue"></span> Nursery</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────
+         TAB 2: MY GARDEN
+         ───────────────────────────────────────────────── -->
+    <section id="tab-content-garden" class="tab-content">
+      <div class="page-layout">
+
+        <div class="section-header">
+          <h1 class="section-title">🪴 My Garden</h1>
+          <p class="section-sub">Track every plant you're growing — from seed to harvest</p>
+        </div>
+
+        <div class="garden-grid">
+
+          <!-- Add Plant Form -->
+          <div class="card card-glow" id="add-plant-card">
+            <div class="card-header">
+              <span class="card-icon">➕</span>
+              <h3 class="card-title">Plant A New Seed</h3>
+            </div>
+            <form id="add-plant-form" class="add-plant-form">
+              <div class="form-row">
+                <input type="text" id="new-plant-name" placeholder="Name (e.g. Balcony Mint)" class="form-input" required />
+                <select id="new-plant-species" class="form-input">
+                  <option value="Tomato">🍅 Tomato</option>
+                  <option value="Tulsi">🌿 Tulsi</option>
+                  <option value="Sweet Basil">🌱 Sweet Basil</option>
+                  <option value="Aloe Vera">🪴 Aloe Vera</option>
+                  <option value="Mint">🍃 Mint</option>
+                  <option value="Rose">🌹 Rose</option>
+                  <option value="Neem">🌳 Neem</option>
+                </select>
+              </div>
+              <input type="email" id="new-plant-email" placeholder="Email for growth reminders (optional)" class="form-input" />
+              <button type="submit" class="btn-primary w-full">🌱 Plant This Seed!</button>
+            </form>
+          </div>
+
+          <!-- My Plants Grid -->
+          <div id="my-plants-grid" class="plants-grid">
+            <!-- Dynamically populated -->
+          </div>
+
+        </div>
+
+        <!-- Soil & Weather Guides -->
+        <div class="guides-row" id="garden-guides">
+          <!-- Soil Guide -->
+          <div class="card" id="soil-guide-card">
+            <div class="card-header">
+              <span class="card-icon">🪨</span>
+              <h3 class="card-title">Soil Preparation Guide</h3>
+              <span class="card-tag" id="soil-guide-plant-name">Select a plant above</span>
+            </div>
+            <div class="soil-grid">
+              <div class="soil-metric">
+                <p class="metric-label">Optimal pH</p>
+                <p id="soil-ph" class="metric-value">—</p>
+              </div>
+              <div class="soil-metric">
+                <p class="metric-label">NPK Ratio</p>
+                <p id="soil-npk" class="metric-value">—</p>
+              </div>
+            </div>
+            <div class="soil-mix-box">
+              <p class="soil-mix-label">Recommended Mix</p>
+              <p id="soil-mix" class="soil-mix-text">Select a plant to view soil preparation guide.</p>
+            </div>
+          </div>
+
+          <!-- Weather Panel -->
+          <div class="card" id="weather-card">
+            <div class="card-header">
+              <span class="card-icon">🌤️</span>
+              <h3 class="card-title">Weather Assistant</h3>
+              <span id="weather-temp" class="weather-temp">Amravati: 32°C</span>
+            </div>
+            <div class="weather-current">
+              <span id="weather-icon" class="weather-icon-big">☀️</span>
+              <div>
+                <p id="weather-desc" class="weather-desc">Clear & Hot Sunny Day</p>
+                <p id="weather-humidity" class="weather-humidity">Humidity: 45% • Wind: 12 km/h</p>
+              </div>
+            </div>
+            <div id="weather-alert" class="weather-alert">
+              <span>⚠️</span>
+              <p id="weather-alert-text">High temperature — water your plants early morning before 9 AM to prevent evaporation stress.</p>
+            </div>
+          </div>
+
+          <!-- Daily Checklist -->
+          <div class="card" id="checklist-card">
+            <div class="card-header">
+              <span class="card-icon">✅</span>
+              <h3 class="card-title">Daily Attention</h3>
+              <span id="care-streak-badge" class="streak-badge">🔥 6-Day Streak</span>
+            </div>
+            <div class="checklist">
+              <label class="check-item">
+                <input type="checkbox" id="task-water" class="check-box" />
+                <div class="check-info">
+                  <p class="check-title">Morning Hydration</p>
+                  <p class="check-sub">Water according to forecast guidelines</p>
+                </div>
+                <span>💧</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" id="task-check" class="check-box" />
+                <div class="check-info">
+                  <p class="check-title">Inspect Leaves</p>
+                  <p class="check-sub">Check for pests, discoloration or spots</p>
+                </div>
+                <span>🔍</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" id="task-snap" class="check-box" />
+                <div class="check-info">
+                  <p class="check-title">Daily AI Scan</p>
+                  <p class="check-sub">Run AI diagnosis on AI Diagnosis tab</p>
+                </div>
+                <span>📸</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────
+         TAB 3: LIFE CYCLE
+         ───────────────────────────────────────────────── -->
+    <section id="tab-content-lifecycle" class="tab-content">
+      <div class="page-layout">
+
+        <div class="section-header">
+          <h1 class="section-title">🌱 Plant Life Cycle</h1>
+          <p class="section-sub">Visualize your plant's complete journey from seed to harvest with a live 3D model</p>
+        </div>
+
+        <div class="lifecycle-layout">
+
+          <!-- Left: Plant Selector + Controls -->
+          <div class="lifecycle-left">
+
+            <div class="card" id="lifecycle-select-card">
+              <div class="card-header">
+                <span class="card-icon">🪴</span>
+                <h3 class="card-title">Active Plant</h3>
+              </div>
+              <div id="lifecycle-plant-selector" class="lifecycle-plant-pills">
+                <p class="empty-msg" id="lc-empty-msg">Add plants in the 'My Garden' tab to start tracking</p>
+              </div>
+            </div>
+
+            <!-- Stage Progress -->
+            <div class="card" id="stage-progress-card">
+              <div class="card-header">
+                <span class="card-icon">📈</span>
+                <h3 class="card-title">Growth Stage</h3>
+                <span id="three-stage-label" class="stage-badge">Seed</span>
+              </div>
+
+              <!-- Stage Timeline -->
+              <div class="stage-timeline">
+                <div class="stage-step" data-stage="1">
+                  <div class="stage-dot" id="sdot-1">🌰</div>
+                  <p class="stage-step-label">Seed</p>
+                </div>
+                <div class="stage-line"></div>
+                <div class="stage-step" data-stage="2">
+                  <div class="stage-dot" id="sdot-2">🌱</div>
+                  <p class="stage-step-label">Sprout</p>
+                </div>
+                <div class="stage-line"></div>
+                <div class="stage-step" data-stage="3">
+                  <div class="stage-dot" id="sdot-3">🪴</div>
+                  <p class="stage-step-label">Seedling</p>
+                </div>
+                <div class="stage-line"></div>
+                <div class="stage-step" data-stage="4">
+                  <div class="stage-dot" id="sdot-4">🌿</div>
+                  <p class="stage-step-label">Vegetative</p>
+                </div>
+                <div class="stage-line"></div>
+                <div class="stage-step" data-stage="5">
+                  <div class="stage-dot" id="sdot-5">🌸</div>
+                  <p class="stage-step-label">Flowering</p>
+                </div>
+                <div class="stage-line"></div>
+                <div class="stage-step" data-stage="6">
+                  <div class="stage-dot" id="sdot-6">🍅</div>
+                  <p class="stage-step-label">Fruiting</p>
+                </div>
+              </div>
+
+              <div class="stage-controls">
+                <span id="growth-time-badge" class="growth-time">Age: 0 days</span>
+                <button id="btn-advance-stage" class="btn-advance">Advance Stage ➔</button>
+              </div>
+            </div>
+
+            <!-- Current Stage Info Card -->
+            <div class="card" id="stage-info-card">
+              <div class="card-header">
+                <span class="card-icon">📋</span>
+                <h3 class="card-title">Stage Care Guide</h3>
+              </div>
+              <div id="stage-care-content" class="stage-care-content">
+                <p class="care-text">Select a plant to view the care guide for its current growth stage.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right: 3D Visualizer -->
+          <div class="lifecycle-right">
+            <div class="card h-full" id="three-card">
+              <div class="card-header">
+                <span class="card-icon">🧊</span>
+                <h3 class="card-title">Interactive 3D Plant Model</h3>
+                <span class="card-tag">OrbitControl: Drag · Scroll</span>
+              </div>
+              <div id="three-container" class="three-container">
+                <div id="three-placeholder" class="three-placeholder">
+                  <p class="placeholder-emoji">🪴</p>
+                  <p class="placeholder-text">Select a plant to render the 3D model</p>
+                </div>
+                <canvas id="three-canvas" class="three-canvas"></canvas>
+              </div>
+              <div class="three-info-row">
+                <div class="three-stat">
+                  <p class="three-stat-label">Health Score</p>
+                  <p id="three-health" class="three-stat-value green">—</p>
+                </div>
+                <div class="three-stat">
+                  <p class="three-stat-label">Days Growing</p>
+                  <p id="three-days" class="three-stat-value">—</p>
+                </div>
+                <div class="three-stat">
+                  <p class="three-stat-label">Stage</p>
+                  <p id="three-stage-val" class="three-stat-value">—</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────
+         TAB 4: COMMUNITY
+         ───────────────────────────────────────────────── -->
+    <section id="tab-content-community" class="tab-content">
+      <div class="page-layout">
+
+        <div class="section-header-row">
           <div>
-            <p class="text-white font-semibold text-sm">Upload or photograph your plant</p>
-            <p class="text-gray-500 text-xs mt-1">Tap to select photo</p>
+            <h1 class="section-title">🌍 Community Hub</h1>
+            <p class="section-sub">Share your plant snaps, ask for advice, and discover local growers</p>
           </div>
-        </div>
-
-        <!-- Preview state (hidden by default) -->
-        <div id="upload-preview" class="hidden relative">
-          <img id="preview-img" alt="Plant preview"
-               class="w-full object-cover rounded-2xl" style="max-height: 200px;" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl"></div>
-          <button id="clear-btn"
-                  class="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 border border-white/20
-                         flex items-center justify-center text-white text-sm hover:bg-red-900/80 transition-colors">
-            ✕
+          <button id="btn-open-post-modal" class="btn-primary btn-post-snap">
+            📸 Post Growth Snap
           </button>
-          <div class="absolute bottom-2 left-3 text-xs text-green-400 font-medium" id="file-name-label"></div>
         </div>
-      </div>
 
-      <input id="file-input" type="file" accept="image/*" capture="environment" class="hidden" />
+        <div class="community-layout">
 
-      <!-- Scan Button -->
-      <button id="scan-btn"
-              disabled
-              class="w-full py-3.5 rounded-2xl text-white font-bold text-sm
-                     flex items-center justify-center gap-2.5 tracking-wide">
-        <span id="scan-icon">🔍</span>
-        <span id="scan-label">Scan Plant</span>
-        <div id="scan-spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full spinner"></div>
-      </button>
-
-      <!-- Demo Mode Button -->
-      <button id="demo-btn"
-              class="w-full py-2.5 rounded-2xl text-green-400 font-semibold text-xs
-                     flex items-center justify-center gap-2 tracking-wide
-                     border border-green-800/60 bg-green-950/40
-                     hover:bg-green-900/40 hover:border-green-600/60 transition-all duration-200">
-        ▶ Demo Mode
-      </button>
-
-      <!-- Error Toast -->
-      <div id="error-box" class="hidden rounded-xl border border-red-700/50 bg-red-950/40 p-3">
-        <p class="text-red-400 text-xs font-semibold" id="error-text"></p>
-      </div>
-
-      <!-- ─── DIAGNOSIS RESULT CARD ────────────────── -->
-      <div id="result-card" class="hidden rounded-2xl border p-5 slide-up">
-
-        <!-- Card header: species + score ring -->
-        <div class="flex items-center gap-4 mb-4">
-          <!-- Score ring -->
-          <div class="relative shrink-0" style="width:110px;height:110px;">
-            <svg width="110" height="110" viewBox="0 0 110 110" class="shrink-0">
-              <circle cx="55" cy="55" r="45" stroke="#1f2d1f" stroke-width="8" fill="none"/>
-              <circle id="score-ring" cx="55" cy="55" r="45" stroke="#22c55e" stroke-width="8" fill="none"
-                      stroke-linecap="round" class="progress-ring-circle" />
-            </svg>
-            <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <span id="score-display" class="text-2xl font-black text-white">0</span>
-              <span class="text-[9px] text-gray-500 font-medium">/ 100</span>
-            </div>
+          <!-- Feed -->
+          <div class="community-feed" id="social-feed">
+            <!-- Dynamically populated -->
           </div>
 
-          <!-- Species info -->
-          <div class="flex-1 min-w-0">
-            <div id="status-pill"
-                 class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
-                        text-[10px] font-bold uppercase tracking-wider mb-1.5">
+          <!-- Sidebar: Map + Nurseries -->
+          <div class="community-sidebar">
+
+            <!-- Map Mini -->
+            <div class="card" id="community-map-card">
+              <div class="card-header">
+                <span class="card-icon">🗺️</span>
+                <h3 class="card-title">Plant Pins Map</h3>
+              </div>
+              <div id="community-map" class="community-map-container"></div>
             </div>
-            <h2 id="species-name" class="text-lg font-black text-white truncate"></h2>
-            <p id="card-subtitle" class="text-xs text-gray-500 mt-0.5"></p>
-          </div>
-        </div>
 
-        <!-- Divider -->
-        <div class="border-t border-white/5 mb-4"></div>
-
-        <!-- Diagnosis -->
-        <div class="mb-3">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">
-            🔬 Diagnosis
-          </p>
-          <p id="diagnosis-text" class="text-sm text-gray-300 leading-relaxed"></p>
-        </div>
-
-        <!-- Prescription -->
-        <div class="prescription-box rounded-xl p-3">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-green-500 mb-1.5">
-            💊 Prescription
-          </p>
-          <p id="prescription-text" class="text-sm text-gray-200 leading-relaxed font-medium"></p>
-        </div>
-
-        <!-- Scan timestamp -->
-        <p id="scan-time" class="text-[10px] text-gray-600 mt-3 text-right"></p>
-      </div>
-
-      <!-- ─── SCAN HISTORY + BIODIVERSITY COUNTER ───── -->
-      <div id="history-section" class="hidden">
-        <div id="biodiversity-bar"
-             class="flex items-center gap-2.5 rounded-xl
-                    border border-green-800/40 bg-green-950/30 px-3 py-2.5 mb-2.5">
-          <span class="text-lg shrink-0">🌍</span>
-          <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-green-600">Biodiversity Score</p>
-            <p id="biodiversity-text" class="text-xs text-green-300 font-semibold mt-0.5">
-              Your area has <span id="unique-species-count" class="text-green-400 font-black">0</span> unique species tracked
-            </p>
-          </div>
-        </div>
-        <p class="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-2">Recent Scans</p>
-        <div id="history-list" class="space-y-1.5"></div>
-      </div>
-
-      <!-- ─── CITY INTELLIGENCE PANEL ──────────────── -->
-      <div id="city-intel-panel"
-           class="rounded-2xl border border-green-800/40 bg-forest-800/60 overflow-hidden">
-        <!-- Header / toggle -->
-        <button id="city-intel-toggle"
-                class="w-full flex items-center justify-between px-4 py-3
-                       hover:bg-green-950/40 transition-colors duration-200">
-          <span class="text-sm font-bold text-white">🏙️ Amravati Green Intelligence</span>
-          <span id="city-intel-chevron"
-                class="text-green-500 text-xs font-black transition-transform duration-300">▲</span>
-        </button>
-        <!-- Collapsible body -->
-        <div id="city-intel-body" class="px-4 pb-4 space-y-2.5">
-          <!-- Stats grid -->
-          <div class="grid grid-cols-3 gap-2">
-            <!-- Total plants -->
-            <div class="rounded-xl bg-forest-700/60 border border-green-900/40 p-2.5 text-center">
-              <p class="text-[9px] text-gray-500 uppercase tracking-wider font-bold leading-tight">Total Plants</p>
-              <p id="ci-total" class="text-base font-black text-green-400 mt-0.5">0</p>
-              <p class="text-[9px] text-gray-600">tracked</p>
+            <!-- Nearby Nurseries -->
+            <div class="card" id="nurseries-card">
+              <div class="card-header">
+                <span class="card-icon">🏬</span>
+                <h3 class="card-title">Nearby Nurseries</h3>
+              </div>
+              <div id="nurseries-list" class="nurseries-list">
+                <!-- Dynamically populated -->
+              </div>
             </div>
-            <!-- Avg health -->
-            <div class="rounded-xl bg-forest-700/60 border border-green-900/40 p-2.5 text-center">
-              <p class="text-[9px] text-gray-500 uppercase tracking-wider font-bold leading-tight">Avg Health</p>
-              <p id="ci-avg" class="text-base font-black text-green-400 mt-0.5">—</p>
-              <p class="text-[9px] text-gray-600">/100</p>
-            </div>
-            <!-- Healthiest zone -->
-            <div class="rounded-xl bg-forest-700/60 border border-green-900/40 p-2.5 text-center">
-              <p class="text-[9px] text-gray-500 uppercase tracking-wider font-bold leading-tight">Top Zone</p>
-              <p class="text-[10px] font-black text-green-400 mt-0.5 leading-tight">Panchasheel Nagar</p>
-            </div>
-          </div>
-          <!-- AI Insight line -->
-          <div class="rounded-xl bg-green-950/40 border border-green-800/30 px-3 py-2">
-            <p class="text-[10px] text-green-600 font-bold uppercase tracking-widest mb-0.5">AI Insight</p>
-            <p id="ci-insight" class="text-xs text-gray-300 leading-relaxed">Calculating…</p>
+
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Footer line -->
-      <footer class="text-center py-2 text-[10px] text-gray-600 font-semibold tracking-wider uppercase mt-4">
-        Powered by Gemini AI | Built for Biothon 2026
-      </footer>
+    <!-- ─────────────────────────────────────────────────
+         TAB 5: LEADERBOARD
+         ───────────────────────────────────────────────── -->
+    <section id="tab-content-leaderboard" class="tab-content">
+      <div class="page-layout">
 
-    </div><!-- end left panel -->
-
-    <!-- ─── RIGHT PANEL (MAP) (60%) ─────────────────── -->
-    <div id="right-panel" class="flex-1 relative">
-      <div id="map" class="w-full h-full"></div>
-
-      <!-- Legend -->
-      <div class="absolute bottom-6 left-3 z-[1000]
-                  bg-forest-800/90 backdrop-blur-sm border border-green-900/50
-                  rounded-xl px-3 py-2 shadow-xl space-y-1.5">
-        <p class="text-[9px] text-gray-600 uppercase tracking-wider font-bold">Health</p>
-        <div class="flex items-center gap-2 text-[10px] text-gray-300">
-          <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span> Healthy (71–100)
+        <div class="section-header">
+          <h1 class="section-title">🏆 Green Thumb Leaderboard</h1>
+          <p class="section-sub">Ranked by number of plants × avg health score. Grow more, care better, climb higher.</p>
         </div>
-        <div class="flex items-center gap-2 text-[10px] text-gray-300">
-          <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span> Stressed (41–70)
+
+        <!-- Top 3 Podium -->
+        <div class="podium-row" id="podium-row">
+          <!-- Dynamically populated -->
         </div>
-        <div class="flex items-center gap-2 text-[10px] text-gray-300">
-          <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span> Critical (0–40)
+
+        <!-- Full Table -->
+        <div class="card" id="leaderboard-card">
+          <div class="card-header">
+            <span class="card-icon">📊</span>
+            <h3 class="card-title">Full Rankings</h3>
+          </div>
+          <table class="lb-table">
+            <thead>
+              <tr class="lb-header">
+                <th>Rank</th>
+                <th>Grower</th>
+                <th>Plants</th>
+                <th>Avg Health</th>
+                <th>Streak</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-list">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
         </div>
+
+        <!-- Achievements -->
+        <div class="card" id="achievements-card">
+          <div class="card-header">
+            <span class="card-icon">🎖️</span>
+            <h3 class="card-title">Your Achievements</h3>
+          </div>
+          <div class="achievements-grid" id="achievements-grid">
+            <div class="achievement unlocked">
+              <span class="ach-icon">🌱</span>
+              <p class="ach-name">First Seed</p>
+              <p class="ach-status green">Unlocked</p>
+            </div>
+            <div class="achievement" id="badge-streak">
+              <span class="ach-icon">🔥</span>
+              <p class="ach-name">7-Day Streak</p>
+              <p class="ach-status">Locked</p>
+            </div>
+            <div class="achievement" id="badge-3plants">
+              <span class="ach-icon">🌿</span>
+              <p class="ach-name">3 Plants</p>
+              <p class="ach-status">Locked</p>
+            </div>
+            <div class="achievement" id="badge-canopy">
+              <span class="ach-icon">🌳</span>
+              <p class="ach-name">100-Day Canopy</p>
+              <p class="ach-status">Locked</p>
+            </div>
+            <div class="achievement" id="badge-biodiversity">
+              <span class="ach-icon">🌍</span>
+              <p class="ach-name">Biodiversity</p>
+              <p class="ach-status">Locked</p>
+            </div>
+            <div class="achievement" id="badge-community">
+              <span class="ach-icon">🤝</span>
+              <p class="ach-name">Community Post</p>
+              <p class="ach-status">Locked</p>
+            </div>
+          </div>
+        </div>
+
       </div>
-    </div><!-- end right panel -->
+    </section>
 
-  </div><!-- end app layout -->
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       MODAL: Post Snap
+       ══════════════════════════════════════════════════ -->
+  <div id="post-modal" class="modal-overlay hidden">
+    <div class="modal-box slide-up">
+      <div class="modal-header">
+        <h3 class="modal-title">📸 Post Plant Snap</h3>
+        <button id="close-post-modal" class="modal-close">✕</button>
+      </div>
+      <form id="post-form" class="modal-form">
+        <div class="form-group">
+          <label class="form-label">Caption / Question</label>
+          <input type="text" id="post-title" required placeholder="e.g. My tomato has yellow leaves, any advice?" class="form-input" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Species</label>
+            <select id="post-species" class="form-input">
+              <option value="Tomato">🍅 Tomato</option>
+              <option value="Tulsi">🌿 Tulsi</option>
+              <option value="Sweet Basil">🌱 Sweet Basil</option>
+              <option value="Aloe Vera">🪴 Aloe Vera</option>
+              <option value="Mint">🍃 Mint</option>
+              <option value="Rose">🌹 Rose</option>
+              <option value="Neem">🌳 Neem</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Days Alive</label>
+            <input type="number" id="post-days" min="1" value="14" class="form-input" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Photo (Demo)</label>
+          <select id="post-img-select" class="form-input">
+            <option value="tomato">🍅 Healthy Red Tomato Branch</option>
+            <option value="tulsi">🌱 Growing Balcony Tulsi</option>
+            <option value="basil">🌿 Lush Green Sweet Basil</option>
+            <option value="dry_basil">🍂 Dry Spotted Basil Leaf</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <div class="location-row">
+            <input type="text" id="post-latlng" readonly value="20.9374, 77.7796" class="form-input flex-1 text-muted" />
+            <button type="button" id="post-locate-btn" class="btn-ghost-sm">📍 My Location</button>
+          </div>
+          <p class="form-hint">Double-click on the main map to pin your exact location</p>
+        </div>
+        <button type="submit" class="btn-primary w-full mt-2">Submit to Community 🚀</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MODAL: Email Notification Inbox
+       ══════════════════════════════════════════════════ -->
+  <div id="inbox-modal" class="modal-overlay hidden">
+    <div class="modal-box slide-up" style="max-width:480px;">
+      <div class="inbox-header">
+        <div class="inbox-header-left">
+          <span style="font-size:1.5rem;">📬</span>
+          <div>
+            <h4 class="inbox-title">RootMap Notification</h4>
+            <p class="inbox-sub">New growth alert delivered</p>
+          </div>
+        </div>
+        <button id="close-inbox-modal" class="modal-close">✕</button>
+      </div>
+      <div id="inbox-email-content" class="inbox-body"></div>
+      <div class="inbox-footer">
+        <span class="inbox-footer-text">Sent to your registered email</span>
+        <button id="dismiss-inbox-btn" class="btn-ghost-sm">Acknowledge ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
 
   <script src="app.js"></script>
 </body>
